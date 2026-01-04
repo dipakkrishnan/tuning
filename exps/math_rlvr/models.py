@@ -1,6 +1,7 @@
 from enum import Enum
 from pydantic import BaseModel
 
+
 class Loss(str, Enum):
     importance_sampling = "importance_sampling"
     # typical REINFORCE loss
@@ -11,6 +12,9 @@ class Loss(str, Enum):
 
 
 class TrainingConfig(BaseModel):
+    # https://tinker-docs.thinkingmachines.ai/model-lineup
+    # defaults to Qwen3-8B since its the smallest model we can do RL with
+    # there is Qwen-4b Instruct as well, but doesn't support <think> tokens
     model_name: str = "Qwen/Qwen3-8B"
     lora_rank: int = 8
     learning_rate: float = 1e-5
