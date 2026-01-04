@@ -18,6 +18,7 @@ def train(
     training_config: TrainingConfig | None = None,
     sampling_config: SamplingConfig | None = None,
 ) -> None:
+    """Base generic training loop for RLVR experiments."""
     training_config = training_config or TrainingConfig()
     sampling_config = sampling_config or SamplingConfig()
 
