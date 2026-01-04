@@ -5,7 +5,19 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "datasets>=3.0.0",
     "ipykernel>=7.1.0",
     "python-dotenv>=1.2.1",
     "tinker>=0.7.0",
+    "tinker-cookbook",
 ]
+
+[tool.uv.sources]
+tinker-cookbook = { path = "../tinker-cookbook", editable = true }
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["exps*"]
