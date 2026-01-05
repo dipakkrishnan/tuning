@@ -1,17 +1,32 @@
 from tinker import types
 from tinker_cookbook import tokenizer_utils
 
+import re
+
 from .dataloader import RLVRMathDataset, to_datum
 from .models import TrainingConfig, SamplingConfig, Loss
 from .utils import create_clients
 
 
+def extract_boxed(completion: str) -> str:
+    """Extract the answer from \\boxed{...}."""
+    match = re.search(r"\\boxed\{((?:[^{}]|\{[^{}]*\})*)\}", completion)
+    if match:
+        return match.group(1).strip()
+    return ""
+
+
 def compute_reward(completion: str, ground_truth: str) -> float:
     """
     Verify if the model completion matches the ground truth answer.
-    Returns 1.0 for correct, 0.0 for incorrect.
+    Returns 1.0 for correct, 0.2 for format only, 0.0 otherwise.
     """
-    raise NotImplementedError("Implement your reward verification logic here")
+    boxed_answer = extract_boxed(completion)
+    if boxed_answer and boxed_answer == ground_truth.strip():
+        return 1.0
+    elif boxed_answer:
+        return 0.2
+    return 0.0
 
 
 def train(
@@ -22,8 +37,7 @@ def train(
     training_config = training_config or TrainingConfig()
     sampling_config = sampling_config or SamplingConfig()
 
-    tokenizer = tokenizer_utils.get_tokenizer(training_config.model_name)
-    dataset = RLVRMathDataset(tokenizer)
+    dataset = RLVRMathDataset(training_config.model_name)
     training_client, sampling_client = create_clients(training_config)
 
     sampling_params = types.SamplingParams(
