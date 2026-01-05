@@ -71,6 +71,11 @@ def to_datum(
     padded_logprobs = [0.0] * prompt_len + sampling_logprobs
     padded_advantages = [0.0] * prompt_len + advantages
 
+    # Note(Dipak): we can do below b/c of the above lines
+    # we have 0s for padded logprobs and advantages for the prompt tokens
+    # so they don't contribute to the loss
+    # we still include them in the "target" shifted right by 1 position
+    # target token is ALWAYS the next token in the sequence
     target_tokens = full_tokens[1:] + [0]
 
     assert len(padded_logprobs) == len(full_tokens)
