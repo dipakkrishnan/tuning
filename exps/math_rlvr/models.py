@@ -1,5 +1,7 @@
 from enum import Enum
+from dataclasses import dataclass
 from pydantic import BaseModel
+import tinker
 
 
 class Loss(str, Enum):
@@ -25,7 +27,13 @@ class TrainingConfig(BaseModel):
 
 
 class SamplingConfig(BaseModel):
-    max_tokens: int = 512
+    max_tokens: int = 2048
     temperature: float = 0.7
     top_p: float = 0.95
     stop: list[str] = ["<|im_end|>"]
+
+
+@dataclass
+class Clients:
+    training_client: tinker.TrainingClient
+    sampling_client: tinker.SamplingClient

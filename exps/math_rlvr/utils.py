@@ -1,11 +1,12 @@
 import tinker
-
-from .models import TrainingConfig
+from tinker import types
+from .models import TrainingConfig, SamplingConfig
+from .models import Clients
 
 
 def create_clients(
     config: TrainingConfig,
-) -> tuple[tinker.TrainingClient, tinker.SamplingClient]:
+) -> Clients:
     service_client = tinker.ServiceClient()
 
     training_client = service_client.create_lora_training_client(
@@ -17,4 +18,16 @@ def create_clients(
         base_model=config.model_name,
     )
 
-    return training_client, sampling_client
+    return Clients(
+        training_client=training_client, 
+        sampling_client=sampling_client
+    )
+
+
+def get_sampling_params(config: SamplingConfig) -> types.SamplingParams:
+    return types.SamplingParams(
+        max_tokens=config.max_tokens,
+        temperature=config.temperature,
+        top_p=config.top_p,
+        stop=config.stop,
+    )

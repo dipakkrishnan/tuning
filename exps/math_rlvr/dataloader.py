@@ -2,22 +2,31 @@ from typing import Any
 
 import torch
 from datasets import load_dataset
-from transformers import PreTrainedTokenizerBase
+from tinker_cookbook import renderers, tokenizer_utils
 
 import tinker
 from tinker import types
+
+
+DEFAULT_SYSTEM_PROMPT = (
+    "You are a helpful math assistant. Think through the problem carefully in "
+    "<think> tags, then provide your final answer in \\boxed{}. /think"
+)
 
 
 class RLVRMathDataset:
 
     def __init__(
         self,
-        tokenizer: PreTrainedTokenizerBase,
+        model_name: str,
         split: str = "train",
         max_prompt_length: int | None = None,
+        system_prompt: str | None = DEFAULT_SYSTEM_PROMPT,
     ):
-        self.tokenizer = tokenizer
+        self.tokenizer = tokenizer_utils.get_tokenizer(model_name)
+        self.renderer = renderers.get_renderer("qwen3", self.tokenizer)
         self.max_prompt_length = max_prompt_length
+        self.system_prompt = system_prompt
         self.dataset = load_dataset("allenai/RLVR-MATH", split=split)
 
     def __len__(self) -> int:
@@ -25,23 +34,29 @@ class RLVRMathDataset:
 
     def __getitem__(self, idx: int) -> dict[str, Any]:
         item = self.dataset[idx]
-        problem_text = self._extract_problem(item["messages"])
-        prompt_tokens = self.tokenizer.encode(problem_text)
+        messages = self.build_messages(item["messages"])
+        model_input = self.renderer.build_generation_prompt(messages)
+        prompt_tokens = model_input.to_ints()
 
         if self.max_prompt_length is not None:
-            prompt_tokens = prompt_tokens[: self.max_prompt_length]
+            prompt_tokens = prompt_tokens[:self.max_prompt_length]
 
         return {
             "prompt_tokens": prompt_tokens,
+            "model_input": model_input,
             "ground_truth": item["ground_truth"],
-            "problem_text": problem_text,
+            "messages": messages,
         }
 
-    def _extract_problem(self, messages: list[dict[str, str]]) -> str:
-        for msg in messages:
-            if msg["role"] == "user":
-                return msg["content"]
-        raise ValueError("No user message found in messages")
+    def build_messages(
+        self, raw_messages: list[dict[str, str]]
+    ) -> list[dict[str, str]]:
+        """Build messages from raw dataset provided user msgs and system msg."""
+        messages = []
+        if self.system_prompt:
+            messages.append({"role": "system", "content": self.system_prompt})
+        messages.extend(raw_messages)
+        return messages
 
 
 def to_datum(
