@@ -4,7 +4,7 @@ from tinker import types
 
 from .dataloader import RLVRMathDataset, to_datum
 from .models import TrainingConfig, SamplingConfig, Loss
-from .utils import create_clients
+from .utils import create_clients, get_sampling_params
 
 
 def extract_boxed(completion: str) -> str:
@@ -39,13 +39,8 @@ def train(
     sampling_config = sampling_config or SamplingConfig()
 
     dataset = RLVRMathDataset(training_config.model_name)
-    training_client, sampling_client = create_clients(training_config)
+    clients = create_clients(training_config)
 
-    sampling_params = types.SamplingParams(
-        max_tokens=sampling_config.max_tokens,
-        temperature=sampling_config.temperature,
-        top_p=sampling_config.top_p,
-        stop=sampling_config.stop,
-    )
+    sampling_params = get_sampling_params(sampling_config)
 
     raise NotImplementedError("Implement your training loop here")
