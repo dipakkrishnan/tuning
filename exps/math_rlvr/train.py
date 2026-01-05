@@ -24,6 +24,7 @@ def compute_reward(completion: str, ground_truth: str) -> float:
     if boxed_answer and boxed_answer == ground_truth.strip():
         return 1.0
     # Note(Dipak): if you want to test reward hacking
+    # or just keep for the first x steps to reward shape
     # elif boxed_answer:
     #     return 0.2
     return 0.0
